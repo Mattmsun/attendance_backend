@@ -1,0 +1,8 @@
+{
+    "name":"Attendance App Dev",
+    "host":"http://localhost:8000/",
+    "key":"cdc1d34d9962a2e151ebcd8619c27c03",
+    "mail":{
+        "host":"host email"
+    }
+}
