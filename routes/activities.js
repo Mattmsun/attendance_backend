@@ -5,25 +5,10 @@ const express = require("express");
 const router = express.Router();
 
 const image = require("../middleware/storeImage");
-
-//获取全部活动
-router.get("/", async (req, res) => {
-  const activities = await Activity.find().sort("name");
-  res.send(activities);
-});
-//获取用户报名过的活动
-router.post("/signedup", async (req, res) => {
-  const { error } = validateUser(req.body);
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
-  const attendance = await Attendance.find({ "user._id": req.body.userId });
-  // await Activity.
-  res.send(attendance);
-});
+const auth = require("../middleware/auth");
 
 //根据用户获取单项活动
-router.post("/single/:id", async (req, res) => {
+router.post("/singleActivity/:id", async (req, res) => {
   const { error } = validateUser(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
@@ -36,13 +21,24 @@ router.post("/single/:id", async (req, res) => {
 
   //返回用户报名过的活动
   if (attendance) return res.send(attendance);
-  //返回用户为参加的活动
+  //返回用户未参加的活动
   const activity = await Activity.findById(activityId);
   res.send(activity);
 });
 
+//获取用户报名过的活动
+router.post("/signedup", async (req, res) => {
+  const { error } = validateUser(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+  const attendance = await Attendance.find({ "user._id": req.body.userId });
+  // await Activity.
+  res.send(attendance);
+});
+
 //新建活动
-router.post("/", image.storeActivityImage, async (req, res) => {
+router.post("/", [image.storeActivityImage, auth], async (req, res) => {
   // console.log(req.body.location.latitude);
   const { error } = validate(req.body);
   if (error) {
@@ -79,21 +75,19 @@ router.post("/", image.storeActivityImage, async (req, res) => {
   res.send(activity);
 });
 
-router.put("/:id", async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const activity = await Activity.findByIdAndUpdate(
-    req.params.id,
-    { name: req.body.name },
-    { new: true }
-  );
-  if (!activity) res.status(404).send("no activity found");
-  res.send(activity);
+//获取全部活动
+router.get("/", async (req, res) => {
+  const activities = await Activity.find().sort("name");
+  res.send(activities);
 });
 
-router.delete(":/id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   const activity = await Activity.findByIdAndRemove(req.params.id);
   if (!activity) res.status(404).send("no activity found");
+  const attendance = await Attendance.deleteMany({
+    "activity._id": req.params.id,
+  });
+
   res.send(activity);
 });
 

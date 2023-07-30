@@ -3,23 +3,28 @@ const {
   Attendance,
   validate,
   validateStatus,
+  validateAttend,
+  validateRecord,
 } = require("../models/attendance");
 const express = require("express");
-const { Participant } = require("../models/participant");
 const { User } = require("../models/user");
+const config = require("config");
+const auth = require("../middleware/auth");
+const { isActivityEndFirstDay } = require("../utils/date");
 const router = express.Router();
+
 // const Fawn = require("fawn");
 // const mongoose = require("mongoose");
 // Fawn.init(mongoose);
 
-router.get("/:id", async (req, res) => {
-  const attendance = await Attendance.findById(req.params.id);
-  if (!attendance) res.status(404).send("no attendance found");
-  res.send(attendance);
-});
-
-router.get("/", async (req, res) => {
-  const attendance = await Attendance.find().select("particiant.name");
+//获取用户签到信息
+router.post("/active/record", async (req, res) => {
+  const { error } = validateRecord(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  const attendance = await Attendance.find({
+    "user._id": req.body.userId,
+    status: "active",
+  }).select("-user");
   res.send(attendance);
 });
 
@@ -28,6 +33,67 @@ router.get("/inactive", async (req, res) => {
   const attendance = await Attendance.find({ status: "inactive" }).select(
     "activity.name activity.startDate activity.endDate activity.location.name user.name _id user.image created_date"
   );
+
+  res.send(attendance);
+});
+
+router.post("/users", auth, async (req, res) => {
+  const attendance = await Attendance.find({
+    status: "active",
+  });
+  if (attendance.length !== 0) {
+    //返回已开始签到的项目
+    const filtered = attendance.filter((a) =>
+      isActivityEndFirstDay(a.activity.startDate, a.activity.attendanceEndTime)
+    );
+    return res.send(filtered);
+  }
+  // .select("user.name user.image activity attendance_date");
+  res.send(attendance);
+});
+
+//批准或拒绝申请
+router.put("/status:id", async (req, res) => {
+  const { error } = validateStatus(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const { approved } = req.body;
+  if (approved) {
+    const attendance = await Attendance.findByIdAndUpdate(
+      req.params.id,
+      { status: "active" },
+      { new: true }
+    );
+    if (!attendance) res.status(404).send("no attendance found");
+    res.send(attendance);
+  } else {
+    const attendance = await Attendance.findByIdAndRemove(req.params.id);
+    if (!attendance) res.status(404).send("no attendance found");
+    res.send(attendance);
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  const attendance = await Attendance.findById(req.params.id);
+  if (!attendance) res.status(404).send("no attendance found");
+  res.send(attendance);
+});
+
+//签到
+router.put("/:id", async (req, res) => {
+  const { error } = validateAttend(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  const attendance = await Attendance.findByIdAndUpdate(
+    req.params.id,
+    {
+      $push: {
+        attendance_date: req.body.attendanceDate,
+      },
+      modified_date: new Date(),
+    },
+    { new: true }
+  );
+  if (!attendance) res.status(404).send("no attendance found");
   res.send(attendance);
 });
 
@@ -74,32 +140,6 @@ router.post("/", async (req, res) => {
     created_date: Date.now(),
   });
   attendance = await attendance.save();
-  res.send(attendance);
-});
-
-//批准或拒绝申请
-router.put("/status:id", async (req, res) => {
-  const { error } = validateStatus(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  const attendance = await Attendance.findByIdAndUpdate(
-    req.params.id,
-    { status: req.body.approved ? "active" : "rejected" },
-    { new: true }
-  );
-  if (!attendance) res.status(404).send("no attendance found");
-  res.send(attendance);
-});
-
-router.put("/:id", async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-  const attendance = await Attendance.findByIdAndUpdate(
-    req.params.id,
-    { participant: req.body.participant },
-    { new: true }
-  );
-  if (!attendance) res.status(404).send("no attendance found");
   res.send(attendance);
 });
 

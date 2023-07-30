@@ -69,13 +69,14 @@ function validateActivity(activity) {
     latitude: Joi.string().required(),
     longitude: Joi.string().required(),
     active: Joi.string().valid("active", "inactive"),
+    admin: Joi.any(),
   });
   return schema.validate(activity);
 }
 
 function validateUserActivity(activity) {
   const schema = Joi.object({
-    userId: Joi.objectId().required(),
+    userId: Joi.objectId(),
   });
   return schema.validate(activity);
 }

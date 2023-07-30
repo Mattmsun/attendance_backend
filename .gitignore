@@ -1,2 +1,5 @@
 /node_modules
-
+uncaughtException.log
+error.log
+log
+/public

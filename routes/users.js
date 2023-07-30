@@ -5,6 +5,7 @@ const config = require("config");
 const { User, validate } = require("../models/user");
 const image = require("../middleware/storeImage");
 var random = require("../utils/randomUser");
+const auth = require("../middleware/auth");
 
 //update user
 router.post("/", image.storeUserImage, async (req, res) => {
@@ -63,6 +64,13 @@ router.get("/login", async (req, res) => {
     console.log("error", error);
     res.status(401).send("something wrong");
   }
+});
+
+router.post("/names", auth, async (req, res) => {
+  // const users = await User.find({ admin: false }).sort("name");
+  const users = await User.find().sort("name");
+
+  res.send(users);
 });
 
 module.exports = router;

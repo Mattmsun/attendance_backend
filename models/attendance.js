@@ -68,7 +68,7 @@ const Attendance = mongoose.model(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "rejected"],
+      enum: ["active", "inactive"],
       default: "inactive",
     },
     modified_date: {
@@ -97,6 +97,20 @@ function validateStatus(attendance) {
   });
   return schema.validate(attendance);
 }
+function validateAttend(attendance) {
+  const schema = Joi.object({
+    attendanceDate: Joi.date().required(),
+  });
+  return schema.validate(attendance);
+}
+function validateRecord(attendance) {
+  const schema = Joi.object({
+    userId: Joi.objectId().required(),
+  });
+  return schema.validate(attendance);
+}
 exports.Attendance = Attendance;
 exports.validate = validateAttendance;
 exports.validateStatus = validateStatus;
+exports.validateAttend = validateAttend;
+exports.validateRecord = validateRecord;
