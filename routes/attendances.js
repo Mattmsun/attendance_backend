@@ -12,6 +12,7 @@ const config = require("config");
 const auth = require("../middleware/auth");
 const { isActivityEndFirstDay } = require("../utils/date");
 const router = express.Router();
+const { getMongodbDateFormat } = require("../utils/date");
 
 // const Fawn = require("fawn");
 // const mongoose = require("mongoose");
@@ -130,8 +131,8 @@ router.post("/", async (req, res) => {
       name,
       activityImage,
       desc,
-      startDate,
-      endDate,
+      startDate: getMongodbDateFormat(startDate),
+      endDate: getMongodbDateFormat(endDate),
       location,
       attendanceStartTime,
       attendanceEndTime,

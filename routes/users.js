@@ -6,26 +6,46 @@ const { User, validate } = require("../models/user");
 const image = require("../middleware/storeImage");
 var random = require("../utils/randomUser");
 const auth = require("../middleware/auth");
+var fs = require("fs");
+const { Attendance } = require("../models/attendance");
 
 //update user
 router.post("/", image.storeUserImage, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { name, openid } = req.body;
+  const { name, userId } = req.body;
   const { image_path } = req.image;
-  let user;
-  if (!image_path) {
-    user = await User.findOneAndUpdate({ openid }, { name }, { new: true });
-  } else {
-    user = await User.findOneAndUpdate(
-      { openid },
-      { name, image: image_path },
-      { new: true }
-    );
-  }
-
+  let user = await User.findById(userId);
   if (!user) res.status(404).send("no user found");
+
+  if (!image_path) {
+    await Attendance.updateMany({ "user._id": userId }, { "user.name": name });
+    user.name = name;
+  } else {
+    if (user.image) {
+      const path = user.image.split("./")[1];
+      fs.stat(path, function (err, stats) {
+        // console.log(stats); //here we got all information of file in stats variable
+        if (err) {
+          return console.error(err);
+        }
+        fs.unlink(path, function (err) {
+          if (err) return console.log(err);
+          // console.log("file deleted successfully");
+        });
+      });
+    }
+    await Attendance.updateMany(
+      { "user._id": userId },
+      { "user.name": name, "user.image": image_path }
+    );
+
+    user.name = name;
+    user.image = image_path;
+  }
+  user = await user.save();
+
   res.send(user);
 });
 

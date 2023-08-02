@@ -6,7 +6,8 @@ const router = express.Router();
 
 const image = require("../middleware/storeImage");
 const auth = require("../middleware/auth");
-
+var fs = require("fs");
+const { getMongodbDateFormat } = require("../utils/date");
 //根据用户获取单项活动
 router.post("/singleActivity/:id", async (req, res) => {
   const { error } = validateUser(req.body);
@@ -39,12 +40,10 @@ router.post("/signedup", async (req, res) => {
 
 //新建活动
 router.post("/", [image.storeActivityImage, auth], async (req, res) => {
-  // console.log(req.body.location.latitude);
   const { error } = validate(req.body);
   if (error) {
     return res.status(400).send(error.details[0].message);
   }
-
   const {
     name,
     desc,
@@ -56,13 +55,16 @@ router.post("/", [image.storeActivityImage, auth], async (req, res) => {
     attendanceStartTime,
     attendanceEndTime,
   } = req.body;
+  // return console.log(getMongodbDateFormat(startDate));
   const { image_path } = req.image;
   let activity = new Activity({
     name,
     activityImage: image_path,
     desc,
-    startDate,
-    endDate,
+    startDate: getMongodbDateFormat(startDate),
+    endDate: getMongodbDateFormat(endDate),
+    // startDate,
+    // endDate,
     attendanceStartTime,
     attendanceEndTime,
     location: {
@@ -82,13 +84,26 @@ router.get("/", async (req, res) => {
 });
 
 router.delete("/:id", auth, async (req, res) => {
-  const activity = await Activity.findByIdAndRemove(req.params.id);
-  if (!activity) res.status(404).send("no activity found");
+  let activity = await Activity.findOne({ _id: req.params.id });
+  if (!activity) return res.status(404).send("no user found");
+
+  const path = activity.activityImage.split("./")[1];
+  fs.stat(path, function (err, stats) {
+    // console.log(stats); //here we got all information of file in stats variable
+    if (err) {
+      return console.error(err);
+    }
+    fs.unlink(path, function (err) {
+      if (err) return console.log(err);
+      // console.log("file deleted successfully");
+    });
+  });
+
+  await Activity.deleteOne({ _id: req.params.id });
   const attendance = await Attendance.deleteMany({
     "activity._id": req.params.id,
   });
-
-  res.send(activity);
+  res.status(200).send({ message: `${req.params.id},delete successfully` });
 });
 
 router.get("/:id", async (req, res) => {

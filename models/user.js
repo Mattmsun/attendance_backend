@@ -24,7 +24,7 @@ function validateUser(user) {
   const schema = Joi.object({
     name: Joi.string().required(),
     image: Joi.any(),
-    openid: Joi.string().required(),
+    userId: Joi.objectId().required(),
   });
   return schema.validate(user);
 }
