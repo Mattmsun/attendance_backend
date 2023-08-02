@@ -87,7 +87,10 @@ router.delete("/:id", auth, async (req, res) => {
   let activity = await Activity.findOne({ _id: req.params.id });
   if (!activity) return res.status(404).send("no user found");
 
-  const path = activity.activityImage.split("./")[1];
+  const path = `public/activityImages${
+    activity.activityImage.split("public/activityImages")[1]
+  }`;
+
   fs.stat(path, function (err, stats) {
     // console.log(stats); //here we got all information of file in stats variable
     if (err) {

@@ -24,7 +24,9 @@ router.post("/", image.storeUserImage, async (req, res) => {
     user.name = name;
   } else {
     if (user.image) {
-      const path = user.image.split("./")[1];
+      const path = `public/userImages${
+        user.image.split("public/userImages")[1]
+      }`;
       fs.stat(path, function (err, stats) {
         // console.log(stats); //here we got all information of file in stats variable
         if (err) {
