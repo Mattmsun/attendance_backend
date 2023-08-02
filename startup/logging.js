@@ -10,7 +10,13 @@ module.exports = function () {
       format: winston.format.simple(),
     })
   );
-  winston.add(new winston.transports.MongoDB({ db: uri, level: "error" }));
+  winston.add(
+    new winston.transports.MongoDB({
+      db: uri,
+      level: "error",
+      dbName: "attendance",
+    })
+  );
   winston.add(
     new winston.transports.File({ filename: "error.log", level: "error" })
   );

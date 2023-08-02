@@ -6,7 +6,7 @@ const uri =
 module.exports = async function () {
   await mongoose.connect(uri, {
     useUnifiedTopology: true,
-    dbName: "attendnace",
+    dbName: "attendance",
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
   });
