@@ -76,7 +76,7 @@ module.exports = {
       await sharp(req.file.buffer).resize(750, 420).toFile(activityImage);
       putImage(activityImage, activityImagePath);
       req.image = {
-        image_path: host + activityImage,
+        image_path: host + "/" + activityImage,
       };
       next();
 
@@ -110,7 +110,7 @@ module.exports = {
         // return fs.unlinkSync(`${__dirname}../${result.name}`); // __dirname：当前文件所在目录
 
         req.image = {
-          image_path: host + userImage,
+          image_path: host + "/" + userImage,
         };
       } else {
         req.image = {

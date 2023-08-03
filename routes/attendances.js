@@ -12,7 +12,7 @@ const config = require("config");
 const auth = require("../middleware/auth");
 const { isActivityEndFirstDay } = require("../utils/date");
 const router = express.Router();
-const { getMongodbDateFormat } = require("../utils/date");
+const { getMongodbDateFormat, getFormatDate } = require("../utils/date");
 
 // const Fawn = require("fawn");
 // const mongoose = require("mongoose");
@@ -42,6 +42,7 @@ router.post("/users", auth, async (req, res) => {
   const attendance = await Attendance.find({
     status: "active",
   });
+
   if (attendance.length !== 0) {
     //返回已开始签到的项目
     const filtered = attendance.filter((a) =>

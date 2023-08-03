@@ -38,4 +38,4 @@ const isActivityEndFirstDay = (startDate, endTime) => {
 const getMongodbDateFormat = (date) => {
   return new Date(date).toUTCString();
 };
-module.exports = { isActivityEndFirstDay, getMongodbDateFormat };
+module.exports = { isActivityEndFirstDay, getMongodbDateFormat, getFormatDate };
